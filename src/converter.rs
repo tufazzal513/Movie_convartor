@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Context, Result as AnyResult};
 use serde_json::Value;
-use std::path::{Path, PathBuf};
 use std::io::{BufRead, BufReader};
+use std::path::{Path, PathBuf};
 use std::process::{Command, Output, Stdio};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -123,32 +123,53 @@ fn run_ffmpeg(
         }
         ConversionMode::Transcode => {
             command.args([
-                "-c:v", "libx264",
-                "-preset", "ultrafast",
-                "-crf", "18",
-                "-pix_fmt", "yuv420p",
-                "-threads", "1",
-                "-filter_threads", "1",
-                "-c:a", "aac",
-                "-b:a", "192k",
+                "-c:v",
+                "libx264",
+                "-preset",
+                "ultrafast",
+                "-crf",
+                "18",
+                "-pix_fmt",
+                "yuv420p",
+                "-threads",
+                "1",
+                "-filter_threads",
+                "1",
+                "-c:a",
+                "aac",
+                "-b:a",
+                "192k",
             ]);
             if !streams.subtitle_indices.is_empty() {
                 command.args(["-c:s", "mov_text"]);
             }
         }
     }
-    command.args(["-movflags", "+faststart", "-progress", "pipe:1", "-nostats", "-fs"]);
+    command.args([
+        "-movflags",
+        "+faststart",
+        "-progress",
+        "pipe:1",
+        "-nostats",
+        "-fs",
+    ]);
     command.arg(max_output_bytes.to_string());
     command.arg(output_path);
     command.stdout(Stdio::piped()).stderr(Stdio::piped());
     let mut child = command.spawn().context("Could not start FFmpeg")?;
-    let stdout = child.stdout.take().context("FFmpeg progress stream unavailable")?;
+    let stdout = child
+        .stdout
+        .take()
+        .context("FFmpeg progress stream unavailable")?;
     let mut last_percent = 0_u8;
     for line in BufReader::new(stdout).lines().flatten() {
         if let Some(value) = line.strip_prefix("out_time_ms=") {
-            if let (Ok(micros), Some(duration)) = (value.parse::<u64>(), streams.duration_seconds) {
+            if let (Ok(micros), Some(duration)) =
+                (value.parse::<u64>(), streams.duration_seconds)
+            {
                 let percent = ((micros as f64 / 1_000_000.0 / duration) * 100.0)
-                    .floor().clamp(0.0, 99.0) as u8;
+                    .floor()
+                    .clamp(0.0, 99.0) as u8;
                 if percent > last_percent {
                     last_percent = percent;
                     progress(percent);
@@ -214,7 +235,10 @@ pub fn convert_video_to_mp4(
         max_output_bytes,
         &mut progress,
     ) {
-        Ok(()) => Ok((output_path.to_string_lossy().into_owned(), ConversionMode::Remux)),
+        Ok(()) => Ok((
+            output_path.to_string_lossy().into_owned(),
+            ConversionMode::Remux,
+        )),
         Err(remux_error) => {
             log::warn!(
                 "Lossless MP4 remux was incompatible; trying H.264/AAC transcode: {remux_error}"
@@ -227,8 +251,11 @@ pub fn convert_video_to_mp4(
                 max_output_bytes,
                 &mut progress,
             )
-                .context("MP4 remux and fallback transcode both failed")?;
-            Ok((output_path.to_string_lossy().into_owned(), ConversionMode::Transcode))
+            .context("MP4 remux and fallback transcode both failed")?;
+            Ok((
+                output_path.to_string_lossy().into_owned(),
+                ConversionMode::Transcode,
+            ))
         }
     }
 }
