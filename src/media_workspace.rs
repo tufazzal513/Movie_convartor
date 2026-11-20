@@ -22,9 +22,9 @@ impl MediaWorkspace {
             }
             match std::fs::remove_dir_all(entry.path()) {
                 Ok(()) => removed += 1,
-                Err(error) => log::warn!(
-                    "Could not remove an abandoned conversion workspace: {error}"
-                ),
+                Err(error) => {
+                    log::warn!("Could not remove an abandoned conversion workspace: {error}")
+                }
             }
         }
         Ok(removed)

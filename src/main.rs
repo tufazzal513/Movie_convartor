@@ -61,8 +61,7 @@ fn start_local_api() -> AnyResult<Option<LocalApiProcess>> {
     let data_dir = std::fs::canonicalize(data_dir)
         .map_err(|_| anyhow!("Cannot resolve Local Bot API data directory"))?;
 
-    let port = std::env::var("LOCAL_BOT_API_PORT")
-        .unwrap_or_else(|_| "8081".to_owned());
+    let port = std::env::var("LOCAL_BOT_API_PORT").unwrap_or_else(|_| "8081".to_owned());
     let port_number = port
         .parse::<u16>()
         .ok()

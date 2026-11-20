@@ -77,9 +77,9 @@ impl DownloadConfig {
             }
             match fs::remove_file(entry.path()).await {
                 Ok(()) => removed += 1,
-                Err(error) => log::warn!(
-                    "Could not remove a stale Local Bot API media cache file: {error}"
-                ),
+                Err(error) => {
+                    log::warn!("Could not remove a stale Local Bot API media cache file: {error}")
+                }
             }
         }
         Ok(removed)
@@ -534,24 +534,20 @@ mod tests {
     #[tokio::test]
     async fn rejects_local_directory_with_cloud_api() {
         let root = tempfile::tempdir().unwrap();
-        assert!(
-            DownloadConfig::new(
-                &parse_api_url("https://api.telegram.org").unwrap(),
-                Some(root.path().to_path_buf()),
-                "123:test-token",
-            )
-            .await
-            .is_err()
-        );
-        assert!(
-            DownloadConfig::new(
-                &test_bot().api_url(),
-                Some("relative-cache".into()),
-                "123:test-token",
-            )
-            .await
-                .is_err()
-        );
+        assert!(DownloadConfig::new(
+            &parse_api_url("https://api.telegram.org").unwrap(),
+            Some(root.path().to_path_buf()),
+            "123:test-token",
+        )
+        .await
+        .is_err());
+        assert!(DownloadConfig::new(
+            &test_bot().api_url(),
+            Some("relative-cache".into()),
+            "123:test-token",
+        )
+        .await
+        .is_err());
     }
 
     #[tokio::test]
