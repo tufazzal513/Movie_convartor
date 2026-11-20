@@ -270,7 +270,9 @@ async fn cleanup_cached_file(config: &DownloadConfig, telegram_path: &str) -> An
         || !is_media_cache_file
         || !fs::metadata(&source).await?.is_file()
     {
-        return Err(anyhow!("Refusing to delete a file outside this bot's Local Bot API cache"));
+        return Err(anyhow!(
+            "Refusing to delete a file outside this bot's Local Bot API cache"
+        ));
     }
     fs::remove_file(source)
         .await
@@ -432,9 +434,13 @@ mod tests {
     }
 
     async fn local_config(root: &Path) -> DownloadConfig {
-        DownloadConfig::new(&test_bot().api_url(), Some(root.to_path_buf()), "123:test-token")
-            .await
-            .unwrap()
+        DownloadConfig::new(
+            &test_bot().api_url(),
+            Some(root.to_path_buf()),
+            "123:test-token",
+        )
+        .await
+        .unwrap()
     }
 
     fn mock_api(responses: Vec<(&'static str, Vec<u8>)>) -> (Bot, std::thread::JoinHandle<()>) {
@@ -528,13 +534,15 @@ mod tests {
     #[tokio::test]
     async fn rejects_local_directory_with_cloud_api() {
         let root = tempfile::tempdir().unwrap();
-        assert!(DownloadConfig::new(
-            &parse_api_url("https://api.telegram.org").unwrap(),
-            Some(root.path().to_path_buf()),
-            "123:test-token",
-        )
-        .await
-        .is_err());
+        assert!(
+            DownloadConfig::new(
+                &parse_api_url("https://api.telegram.org").unwrap(),
+                Some(root.path().to_path_buf()),
+                "123:test-token",
+            )
+            .await
+            .is_err()
+        );
         assert!(
             DownloadConfig::new(
                 &test_bot().api_url(),
@@ -551,8 +559,12 @@ mod tests {
         let root = tempfile::tempdir().unwrap();
         let token_dir = root.path().join("123:test-token");
         fs::create_dir(&token_dir).await.unwrap();
-        fs::write(token_dir.join("file_1.mp4"), b"cached").await.unwrap();
-        fs::write(token_dir.join("database"), b"session").await.unwrap();
+        fs::write(token_dir.join("file_1.mp4"), b"cached")
+            .await
+            .unwrap();
+        fs::write(token_dir.join("database"), b"session")
+            .await
+            .unwrap();
         fs::create_dir(token_dir.join("nested")).await.unwrap();
         fs::write(token_dir.join("nested/file_2.mp4"), b"nested")
             .await
@@ -629,8 +641,8 @@ mod tests {
                 Some(root.path().to_path_buf()),
                 "123:test-token",
             )
-                .await
-                .unwrap(),
+            .await
+            .unwrap(),
         )
         .await
         .unwrap();
